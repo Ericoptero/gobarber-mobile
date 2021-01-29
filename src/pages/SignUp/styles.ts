@@ -1,11 +1,16 @@
 import styled from 'styled-components/native';
-import {getBottomSpace} from 'react-native-iphone-x-helper';
+import { getBottomSpace } from 'react-native-iphone-x-helper';
+import { Form as FormUnform } from '@unform/mobile';
 
 export const Container = styled.View`
   flex: 1;
   align-items: center;
   justify-content: center;
   padding: 0 30px 50px;
+`;
+
+export const Form = styled(FormUnform)`
+  width: 100%;
 `;
 
 export const Title = styled.Text`
