@@ -14,6 +14,7 @@ import { useNavigation } from '@react-navigation/native';
 import * as Yup from 'yup';
 import { FormHandles } from '@unform/core';
 
+import { useAuth } from '../../hooks/auth';
 import Input from '../../components/Input';
 import Button from '../../components/Button';
 
@@ -43,6 +44,10 @@ const SignIn: React.FC = () => {
   const navigation = useNavigation();
   const [isKeyboardActive, setIsKeyboardActive] = useState(false);
 
+  const { signIn, user } = useAuth();
+
+  console.log(user);
+
   useEffect(() => {
     Keyboard.addListener('keyboardDidShow', () => {
       setIsKeyboardActive(true);
@@ -61,42 +66,45 @@ const SignIn: React.FC = () => {
     };
   }, []);
 
-  const handleSignIn = useCallback(async (data: SignInFormData) => {
-    formRef.current?.setErrors({});
+  const handleSignIn = useCallback(
+    async (data: SignInFormData) => {
+      formRef.current?.setErrors({});
 
-    try {
-      const schema = Yup.object().shape({
-        email: Yup.string()
-          .required('O campo de email é obrigatório')
-          .email('Digite um e-mail válido'),
-        password: Yup.string().required('O campo de senha é obrigatório'),
-      });
+      try {
+        const schema = Yup.object().shape({
+          email: Yup.string()
+            .required('O campo de email é obrigatório')
+            .email('Digite um e-mail válido'),
+          password: Yup.string().required('O campo de senha é obrigatório'),
+        });
 
-      await schema.validate(data, {
-        abortEarly: false,
-      });
+        await schema.validate(data, {
+          abortEarly: false,
+        });
 
-      // await signIn({
-      //   email: data.email,
-      //   password: data.password,
-      // });
+        await signIn({
+          email: data.email,
+          password: data.password,
+        });
 
-      // history.push('/dashboard');
-    } catch (err) {
-      if (err instanceof Yup.ValidationError) {
-        const errors = getValidationErrors(err);
+        // history.push('/dashboard');
+      } catch (err) {
+        if (err instanceof Yup.ValidationError) {
+          const errors = getValidationErrors(err);
 
-        formRef.current?.setErrors(errors);
+          formRef.current?.setErrors(errors);
 
-        return;
+          return;
+        }
+
+        Alert.alert(
+          'Erro na autenticação',
+          'Ocorreu um erro ao fazer login, cheque credenciais.',
+        );
       }
-
-      Alert.alert(
-        'Erro na autenticação',
-        'Ocorreu um erro ao fazer login, cheque credenciais.',
-      );
-    }
-  }, []);
+    },
+    [signIn],
+  );
 
   return (
     <>
