@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import {
   Image,
   KeyboardAvoidingView,
@@ -7,13 +7,16 @@ import {
   View,
   Keyboard,
   TextInput,
+  Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import { useNavigation } from '@react-navigation/native';
 import { FormHandles } from '@unform/core';
+import * as Yup from 'yup';
 
 import Input from '../../components/Input';
 import Button from '../../components/Button';
+import getValidationErrors from '../../utils/getValidationErrors';
 
 import logoImg from '../../assets/logo.png';
 
@@ -24,6 +27,12 @@ import {
   BackToSignInText,
   Form,
 } from './styles';
+
+interface SignUpFormData {
+  name: string;
+  email: string;
+  password: string;
+}
 
 const SignUp: React.FC = () => {
   const formRef = useRef<FormHandles>(null);
@@ -50,6 +59,46 @@ const SignUp: React.FC = () => {
     };
   }, []);
 
+  const handleSignUp = useCallback(async (data: SignUpFormData) => {
+    formRef.current?.setErrors({});
+
+    try {
+      const schema = Yup.object().shape({
+        name: Yup.string().required('O campo de nome é obrigatório'),
+        email: Yup.string()
+          .required('O campo de email é obrigatório')
+          .email('Digite um e-mail válido'),
+        password: Yup.string().min(6, 'A senha deve ter no mínimo 6 digitos'),
+      });
+
+      await schema.validate(data, {
+        abortEarly: false,
+      });
+
+      // await api.post('/users', data);
+
+      // history.push('/');
+
+      Alert.alert(
+        'Cadastro realizado',
+        'Você já pode fazer seu logon no GoBarber',
+      );
+    } catch (err) {
+      if (err instanceof Yup.ValidationError) {
+        const errors = getValidationErrors(err);
+
+        formRef.current?.setErrors(errors);
+
+        return;
+      }
+
+      Alert.alert(
+        'Erro no cadastro',
+        'Ocorreu um erro ao fazer o cadastro, tente novamente.',
+      );
+    }
+  }, []);
+
   return (
     <>
       <KeyboardAvoidingView
@@ -68,7 +117,7 @@ const SignUp: React.FC = () => {
               <Title>Crie sua conta</Title>
             </View>
 
-            <Form ref={formRef} onSubmit={data => console.log(data)}>
+            <Form ref={formRef} onSubmit={handleSignUp}>
               <Input
                 name="name"
                 icon="user"
